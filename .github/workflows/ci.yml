@@ -60,8 +60,8 @@ jobs:
               <servers>
                 <server>
                   <id>github</id>
-                  <username>${{ secrets.GITHUB_USERNAME }}</username>
-                  <password>${{ secrets.GITHUB_TOKEN }}</password>
+                  <username>${{ secrets.MAVEN_USERNAME }}</username>
+                  <password>${{ secrets.MAVEN_PASSWORD }}</password>
                 </server>
               </servers>
             </settings>
