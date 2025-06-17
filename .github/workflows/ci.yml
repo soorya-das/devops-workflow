@@ -46,4 +46,12 @@ jobs:
         run: mvn clean install
 
       - name: Print Project Key
-        run: echo "Project Key: ${{ inputs.project-key }}"
+        run: |
+          echo "Project Key: ${{ inputs['project-key'] }}"
+
+      # code formatting using spotless
+      - name: Check code formatting
+        run: mvn spotless:check
+      # mvn test
+      - name: Run unit tests
+        run: ./mvnw test
