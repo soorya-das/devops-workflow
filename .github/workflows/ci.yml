@@ -10,6 +10,9 @@ on:
         required: false
         type: boolean
         default: false
+      pr-title:
+        required: false
+        type: string
     secrets:
       github-token:
         required: true
@@ -24,9 +27,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Validate PR Title
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && inputs.pr-title != '' }}
         run: |
           echo "PR title: ${{ github.event.pull_request.title }}"
+          echo "Expected: ${{ inputs.pr-title }}"
           if ! [[ "${{ github.event.pull_request.title }}" =~ ${{ inputs.pr-title }} ]]; then
             echo "❌ PR title does not match required pattern: ${{ inputs.pr-title }}"
             exit 1
@@ -43,4 +47,3 @@ jobs:
 
       - name: Print Project Key
         run: echo "Project Key: ${{ inputs.project-key }}"
-
