@@ -1,0 +1,37 @@
+name: Reusable CI Workflow
+
+on:
+  workflow_call:
+    inputs:
+      project-key:
+        required: true
+        type: string
+      sonar-check-enabled:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      github-token:
+        required: true
+      github-username:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Maven
+        run: mvn clean install
+
+      - name: Print Project Key
+        run: echo "Project Key: ${{ inputs.project-key }}"
