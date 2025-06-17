@@ -78,6 +78,9 @@ jobs:
         run: |
           echo "Project Key: ${{ inputs['project-key'] }}"
 
+      - name: Make Maven Wrapper Executable
+        run: chmod +x ./mvnw
+
       # mvn test
       - name: Run unit tests
         run: ./mvnw test
