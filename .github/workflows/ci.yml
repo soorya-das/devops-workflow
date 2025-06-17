@@ -19,10 +19,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Validate PR Title
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "PR title: ${{ github.event.pull_request.title }}"
+          if ! [[ "${{ github.event.pull_request.title }}" =~ ${{ inputs.pr-title }} ]]; then
+            echo "❌ PR title does not match required pattern: ${{ inputs.pr-title }}"
+            exit 1
+          fi
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -35,3 +43,4 @@ jobs:
 
       - name: Print Project Key
         run: echo "Project Key: ${{ inputs.project-key }}"
+
