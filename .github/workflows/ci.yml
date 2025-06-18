@@ -79,12 +79,20 @@ jobs:
       - name: Check code formatting
         run: ./mvnw spotless:check
 
-      # 7. Build (with version if needed)
+      - name: Set Project Version from Properties File
+        run: |
+          VERSION=$(grep build.version version.properties | cut -d= -f2)
+          echo "Using build version: $VERSION"
+          ./mvnw versions:set -DnewVersion=$VERSION
+          
+          
+          # 7. Build (with version if needed)
 #      - name: Read build.version and build
 #        run: |
 #          export VERSION=$(grep build.version version.properties | cut -d'=' -f2)
 #          echo "Building version: $VERSION"
 #          ./mvnw -Dbuild.version=$VERSION clean install
+
 
       - name: Check if Maven version already exists
         env:
