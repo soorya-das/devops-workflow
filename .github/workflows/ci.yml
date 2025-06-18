@@ -89,7 +89,7 @@ jobs:
       - name: Check if Maven version already exists
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGE_NAME: "${{package-name}}"
+          PACKAGE_NAME: "${{inputs.package-name}}"
         run: |
           VERSION=$(grep build.version version.properties | cut -d'=' -f2)
           echo "Detected build version: $VERSION"
