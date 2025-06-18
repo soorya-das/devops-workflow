@@ -13,6 +13,9 @@ on:
       pr-title:
         required: true
         type: string
+      package-name:
+        required: true
+        type: string
     secrets:
       github-token:
         required: true
@@ -85,30 +88,37 @@ jobs:
 
       - name: Check if Maven version already exists
         env:
-          GITHUB_TOKEN: ${{ secrets.github-username }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE_NAME: "${{package-name}}"
         run: |
           VERSION=$(grep build.version version.properties | cut -d'=' -f2)
           echo "Detected build version: $VERSION"
 
           OWNER="${GITHUB_REPOSITORY%/*}"
           REPO="${GITHUB_REPOSITORY#*/}"
-          PACKAGE_NAME="com.example.employee-service"
-
+          
           echo "Checking for version $VERSION in $OWNER/$REPO..."
 
           PACKAGE_URL="https://api.github.com/users/$OWNER/packages/maven/$PACKAGE_NAME/versions"
-
           RESPONSE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "$PACKAGE_URL")
-          MATCHING_VERSION=$(echo "$RESPONSE" | jq -r ".[] | select(.name == \"$VERSION\")")
 
-          if [[ -n "$MATCHING_VERSION" ]]; then
-            echo "❌ Version $VERSION already exists in GitHub Packages."
-            exit 1
+          # Debug output
+          echo "Raw API response: $RESPONSE"
+
+          # Check if the response is a valid JSON array before using jq
+          if echo "$RESPONSE" | jq -e 'type == "array"' > /dev/null; then
+            MATCHING_VERSION=$(echo "$RESPONSE" | jq -r ".[] | select(.name == \"$VERSION\")")
+            if [[ -n "$MATCHING_VERSION" ]]; then
+              echo "❌ Version $VERSION already exists in GitHub Packages."
+              exit 1
+            else
+              echo "✅ Version $VERSION not found. Proceeding with build."
+            fi
           else
-            echo "✅ Version $VERSION not found. Proceeding with build."
+            echo "⚠️ API did not return a valid array. Package may not be published yet, or the token has insufficient access."
+            echo "Response: $RESPONSE"
+            exit 0
           fi
-      
-      
 
       - name: Build with Maven
         run: ./mvnw -Dbuild.version=$VERSION clean install
