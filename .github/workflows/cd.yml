@@ -1,0 +1,42 @@
+# .github/workflows/reusable-publish.yml
+name: Reusable Maven Publish
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        required: false
+        default: '17'
+        type: string
+
+    secrets:
+      MAVEN_USERNAME:
+        required: true
+      MAVEN_PASSWORD:
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java ${{ inputs.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: 'temurin'
+
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
+      - name: Publish to GitHub Packages
+        run: ./mvnw --batch-mode deploy
+        env:
+          GITHUB_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          GITHUB_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
