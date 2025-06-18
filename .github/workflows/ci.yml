@@ -23,35 +23,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # 1. Checkout the repo
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Validate PR Title
-        if: ${{ github.event_name == 'pull_request' && inputs.pr-title != '' }}
-        run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PATTERN="${{ inputs.pr-title }}"
-
-          echo "PR title: $PR_TITLE"
-          echo "Expected pattern: $PATTERN"
-
-          if [[ "$PR_TITLE" =~ $PATTERN ]]; then
-            echo "✅ PR title is valid"
-          else
-            echo "❌ PR title does not match required pattern: $PATTERN"
-            exit 1
-          fi
-
-      # code formatting using spotless
-      - name: Check code formatting
-        run: mvn spotless:check
-
+      # 2. Set up Java
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
+      # 3. Make Maven Wrapper Executable
+      - name: Make Maven Wrapper Executable
+        run: chmod +x ./mvnw
+
+      # 4. Configure Maven for GitHub Packages
       - name: Configure Maven for GitHub Packages
         env:
           GITHUB_USERNAME: ${{ secrets.github-username }}
@@ -69,18 +56,40 @@ jobs:
             </servers>
           </settings>
           EOF
-      
 
-      - name: Build with Maven
-        run: mvn clean install
+      # 5. Validate PR title pattern
+      - name: Validate PR Title
+        if: ${{ github.event_name == 'pull_request' && inputs.pr-title != '' }}
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PATTERN="${{ inputs.pr-title }}"
+          echo "PR title: $PR_TITLE"
+          echo "Expected pattern: $PATTERN"
+          if [[ "$PR_TITLE" =~ $PATTERN ]]; then
+            echo "✅ PR title is valid"
+          else
+            echo "❌ PR title does not match required pattern: $PATTERN"
+            exit 1
+          fi
 
+      # 6. Code formatting check
+      - name: Check code formatting
+        run: ./mvnw spotless:check
+
+      # 7. Build (with version if needed)
+      - name: Read build.version and build
+        run: |
+          export VERSION=$(grep build.version version.properties | cut -d'=' -f2)
+          echo "Building version: $VERSION"
+          ./mvnw -Dbuild.version=$VERSION clean install
+
+      # 8. Unit Tests
+      - name: Run unit tests
+        run: ./mvnw test
+
+      # 9. Print Project Key
       - name: Print Project Key
         run: |
           echo "Project Key: ${{ inputs['project-key'] }}"
 
-      - name: Make Maven Wrapper Executable
-        run: chmod +x ./mvnw
 
-      # mvn test
-      - name: Run unit tests
-        run: ./mvnw test
