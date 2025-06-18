@@ -77,11 +77,33 @@ jobs:
         run: ./mvnw spotless:check
 
       # 7. Build (with version if needed)
-      - name: Read build.version and build
+#      - name: Read build.version and build
+#        run: |
+#          export VERSION=$(grep build.version version.properties | cut -d'=' -f2)
+#          echo "Building version: $VERSION"
+#          ./mvnw -Dbuild.version=$VERSION clean install
+
+      - name: Read build.version and check if version exists
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token }}
         run: |
-          export VERSION=$(grep build.version version.properties | cut -d'=' -f2)
+          VERSION=$(grep build.version version.properties | cut -d'=' -f2)
           echo "Building version: $VERSION"
-          ./mvnw -Dbuild.version=$VERSION clean install
+
+          PACKAGE_URL="https://maven.pkg.github.com/OWNER/REPO/com/example/employee-service/$VERSION/employee-service-$VERSION.jar"
+
+          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" -H "Authorization: Bearer $GITHUB_TOKEN" "$PACKAGE_URL")
+
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "❌ Version $VERSION already exists in GitHub Packages. Failing the build."
+            exit 1
+          else
+            echo "✅ Version $VERSION does not exist. Proceeding with build."
+          fi
+
+      - name: Build with version
+        run: ./mvnw -Dbuild.version=$VERSION clean install
+
 
       # 8. Unit Tests
       - name: Run unit tests
