@@ -42,5 +42,6 @@ jobs:
         run: |
           VERSION=$(grep build.version version.properties | cut -d'=' -f2)
           echo "Using build version: $VERSION"
-          ./mvnw --batch-mode deploy -Dbuild.version=$VERSION
+          ./mvnw --batch-mode deploy -Dproject.version=$VERSION
+      
         
