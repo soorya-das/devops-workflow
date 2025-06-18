@@ -85,25 +85,29 @@ jobs:
 
       - name: Read build.version and check if version exists
         env:
-          GITHUB_TOKEN: ${{ secrets.github-token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=$(grep build.version version.properties | cut -d'=' -f2)
           echo "Building version: $VERSION"
 
-          PACKAGE_URL="https://maven.pkg.github.com/OWNER/REPO/com/example/employee-service/$VERSION/employee-service-$VERSION.jar"
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          REPO="${GITHUB_REPOSITORY#*/}"
 
-          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" -H "Authorization: Bearer $GITHUB_TOKEN" "$PACKAGE_URL")
+          PACKAGE_URL="https://api.github.com/repos/$OWNER/$REPO/packages/maven/com/example/employee-service/versions"
 
-          if [ "$HTTP_STATUS" -eq 200 ]; then
+          EXISTS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "$PACKAGE_URL" \
+            | jq '.[] | select(.name == "'"$VERSION"'") | .id' | wc -l)
+
+          if [ "$EXISTS" -gt 0 ]; then
             echo "❌ Version $VERSION already exists in GitHub Packages. Failing the build."
             exit 1
           else
             echo "✅ Version $VERSION does not exist. Proceeding with build."
           fi
+  
 
-      - name: Build with version
+      - name: Build with Maven
         run: ./mvnw -Dbuild.version=$VERSION clean install
-
 
       # 8. Unit Tests
       - name: Run unit tests
