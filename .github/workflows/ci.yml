@@ -83,28 +83,32 @@ jobs:
 #          echo "Building version: $VERSION"
 #          ./mvnw -Dbuild.version=$VERSION clean install
 
-      - name: Read build.version and check if version exists
+      - name: Check if Maven version already exists
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=$(grep build.version version.properties | cut -d'=' -f2)
-          echo "Building version: $VERSION"
+          echo "Detected build version: $VERSION"
 
           OWNER="${GITHUB_REPOSITORY%/*}"
           REPO="${GITHUB_REPOSITORY#*/}"
+          PACKAGE_NAME="com.example.employee-service"
 
-          PACKAGE_URL="https://api.github.com/repos/$OWNER/$REPO/packages/maven/com/example/employee-service/versions"
+          echo "Checking for version $VERSION in $OWNER/$REPO..."
 
-          EXISTS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "$PACKAGE_URL" \
-            | jq '.[] | select(.name == "'"$VERSION"'") | .id' | wc -l)
+          PACKAGE_URL="https://api.github.com/users/$OWNER/packages/maven/$PACKAGE_NAME/versions"
 
-          if [ "$EXISTS" -gt 0 ]; then
-            echo "❌ Version $VERSION already exists in GitHub Packages. Failing the build."
+          RESPONSE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "$PACKAGE_URL")
+          MATCHING_VERSION=$(echo "$RESPONSE" | jq -r ".[] | select(.name == \"$VERSION\")")
+
+          if [[ -n "$MATCHING_VERSION" ]]; then
+            echo "❌ Version $VERSION already exists in GitHub Packages."
             exit 1
           else
-            echo "✅ Version $VERSION does not exist. Proceeding with build."
+            echo "✅ Version $VERSION not found. Proceeding with build."
           fi
-  
+      
+      
 
       - name: Build with Maven
         run: ./mvnw -Dbuild.version=$VERSION clean install
