@@ -69,7 +69,7 @@ jobs:
 
       - name: Set up Kubeconfig (Local)
         run: |
-          mkdir ~/.kube
+          mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
           chmod 600 ~/.kube/config
 
@@ -78,10 +78,11 @@ jobs:
 
       - name: Deploy with Helm
         run: |
-          helm upgrade --install employee-service ./helm/employee-service \
+          helm upgrade --install ${{ inputs.image_name }} ./helm/${{ inputs.image_name }} \
           --namespace default --create-namespace \
-          --set image.repository=${{ secrets.DOCKER_USERNAME }}/employee-service \
+          --set image.repository=${{ secrets.DOCKER_USERNAME }}/${{ inputs.image_name }} \
           --set image.tag=latest
+      
           
       
 
