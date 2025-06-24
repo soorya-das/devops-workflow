@@ -24,7 +24,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest #Defines a job named build which runs on an Ubuntu GitHub runner.
     steps:
       # 1. Checkout the repo
       - name: Checkout Code
@@ -41,7 +41,7 @@ jobs:
       - name: Make Maven Wrapper Executable
         run: chmod +x ./mvnw
 
-      # 4. Configure Maven for GitHub Packages
+      # 4. Creates a .m2/settings.xml file with GitHub credentials
       - name: Configure Maven for GitHub Packages
         env:
           GITHUB_USERNAME: ${{ secrets.github-username }}
@@ -79,21 +79,15 @@ jobs:
       - name: Check code formatting
         run: ./mvnw spotless:check
 
+      # 7. Set Project Version from Properties File
       - name: Set Project Version from Properties File
         run: |
           VERSION=$(grep build.version version.properties | cut -d= -f2)
           echo "Using build version: $VERSION"
           ./mvnw versions:set -DnewVersion=$VERSION
           
-          
-          # 7. Build (with version if needed)
-#      - name: Read build.version and build
-#        run: |
-#          export VERSION=$(grep build.version version.properties | cut -d'=' -f2)
-#          echo "Building version: $VERSION"
-#          ./mvnw -Dbuild.version=$VERSION clean install
 
-
+      # 8. Build (with version if needed)
       - name: Check if Maven version already exists
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

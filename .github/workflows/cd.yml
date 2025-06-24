@@ -67,6 +67,24 @@ jobs:
                  -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
 
+      - name: Set up Kubeconfig (Local)
+        run: |
+          mkdir ~/.kube
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install employee-service ./helm/employee-service \
+          --namespace default --create-namespace \
+          --set image.repository=${{ secrets.DOCKER_USERNAME }}/employee-service \
+          --set image.tag=latest
+          
+      
+
 
       
         
