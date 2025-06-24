@@ -11,6 +11,9 @@ on:
       image-name:
         required: true
         type: string
+      chart-name:
+        required: true
+        type: string
 
     secrets:
       MAVEN_USERNAME:
@@ -80,7 +83,7 @@ jobs:
 
       - name: Deploy with Helm
         run: |
-          helm upgrade --install ${{ inputs.image_name }} ./helm/${{ inputs.image_name }} \
+          helm upgrade --install ${{ inputs.image_name }} ./helm/${{ inputs.chart_name }} \
           --namespace default --create-namespace \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/${{ inputs.image_name }} \
           --set image.tag=latest
