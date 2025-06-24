@@ -21,6 +21,8 @@ on:
         required: true
       DOCKER_PASSWORD:
         required: true
+      KUBECONFIG_CONTENT:
+        required: true
 
 jobs:
   publish:
