@@ -33,8 +33,8 @@ on:
         required: true
       DOCKER_PASSWORD:
         required: true
-      KUBECONFIG_CONTENT:
-        required: true
+#      KUBECONFIG_CONTENT:
+#        required: true
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
@@ -93,19 +93,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-
       - name: Update kubeconfig with cluster
         run: |
           aws eks update-kubeconfig --region ap-south-1 --name ${{ inputs.cluster-name }}
 
-      - name: Use correct EKS context
+      - name: Test kubectl connectivity
         run: |
-          CONTEXT=$(kubectl config get-contexts -o name | grep ${{ inputs.cluster-name }})
-          echo "Using context: $CONTEXT"
-          kubectl config use-context "$CONTEXT"
+          kubectl get nodes
       
 
-      #      - name: Set up Kubeconfig
+#      - name: Set up Kubeconfig
 #        run: |
 #          mkdir -p ~/.kube
 #          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
