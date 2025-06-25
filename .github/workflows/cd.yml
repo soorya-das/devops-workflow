@@ -78,10 +78,10 @@ jobs:
                  -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
 
-      - name: Set up Kubeconfig (Local)
+      - name: Set up Kubeconfig
         run: |
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
           chmod 600 ~/.kube/config
 
       - name: Set up Helm
