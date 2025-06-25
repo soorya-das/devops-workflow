@@ -93,15 +93,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - name: Set up Kubeconfig
+
+      - name: Update kubeconfig with cluster
         run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
-          chmod 600 ~/.kube/config
+          aws eks update-kubeconfig --region ap-south-1 --name ${{ inputs.cluster-name }}
 
       - name: Set current context
         run: |
           kubectl config use-context ${{ inputs.cluster-name }}
+
+#      - name: Set up Kubeconfig
+#        run: |
+#          mkdir -p ~/.kube
+#          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
+#          chmod 600 ~/.kube/config
 
       - name: Debug kubeconfig
         run: |
