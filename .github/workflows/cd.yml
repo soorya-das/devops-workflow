@@ -98,11 +98,14 @@ jobs:
         run: |
           aws eks update-kubeconfig --region ap-south-1 --name ${{ inputs.cluster-name }}
 
-      - name: Set current context
+      - name: Use correct EKS context
         run: |
-          kubectl config use-context ${{ inputs.cluster-name }}
+          CONTEXT=$(kubectl config get-contexts -o name | grep ${{ inputs.cluster-name }})
+          echo "Using context: $CONTEXT"
+          kubectl config use-context "$CONTEXT"
+      
 
-#      - name: Set up Kubeconfig
+      #      - name: Set up Kubeconfig
 #        run: |
 #          mkdir -p ~/.kube
 #          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
