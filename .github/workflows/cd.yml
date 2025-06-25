@@ -20,6 +20,9 @@ on:
       namespace:
         required: true
         type: string
+      cluster-name:
+        required: true
+        type: string
 
     secrets:
       MAVEN_USERNAME:
@@ -95,6 +98,10 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
           chmod 600 ~/.kube/config
+
+      - name: Set current context
+        run: |
+          kubectl config use-context ${{ inputs.cluster-name }}
 
       - name: Debug kubeconfig
         run: |
