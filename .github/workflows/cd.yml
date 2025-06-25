@@ -96,6 +96,12 @@ jobs:
           echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
           chmod 600 ~/.kube/config
 
+      - name: Debug kubeconfig
+        run: |
+          kubectl config get-contexts
+          kubectl get nodes
+
+
       - name: Set up Helm
         uses: azure/setup-helm@v3
 
