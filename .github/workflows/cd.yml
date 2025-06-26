@@ -23,6 +23,9 @@ on:
       cluster-name:
         required: true
         type: string
+      working-directory:
+        required: true
+        type: string
 
     secrets:
       MAVEN_USERNAME:
@@ -97,6 +100,7 @@ jobs:
         uses: hashicorp/setup-terraform@v1
 
       - name: Terraform Init
+        working-directory: ${{inputs.working-directory}}
         run: terraform init
 
       - name: Terraform Apply
