@@ -134,12 +134,24 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v3
 
+      # Add a new step after Configure AWS Credentials to fetch the password
+
+      - name: Retrieve RDS password from AWS Secrets Manager
+        id: fetch_rds_password
+        run: |
+          # Replace YOUR_SECRET_NAME with your actual Secrets Manager secret name or ARN
+          PASSWORD=$(aws secretsmanager get-secret-value --secret-id YOUR_SECRET_NAME --query SecretString --output text)
+          echo "rds_password=$PASSWORD" >> $GITHUB_OUTPUT
+
+
       - name: Deploy with Helm
         run: |
           helm upgrade --install ${{ inputs.service-name }} ./helm/${{ inputs.chart-name }} \
           --namespace ${{ inputs.namespace }} --create-namespace \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }} \
-          --set image.tag=latest
+          --set image.tag=latest \
+          --set db.password=${{ steps.fetch_rds_password.outputs.rds_password }}
+
       
           
       
