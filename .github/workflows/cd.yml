@@ -42,6 +42,8 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
+      RDS_SECRET_ARN:
+        required: true
 
 jobs:
   publish:
@@ -76,17 +78,17 @@ jobs:
 #        run: |
 #          ./mvnw --batch-mode deploy
 #
-#      - name: Login to Docker Hub
-#        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-#
-#      - name: Build and Push Docker image
-#        run: |
-#          echo "<settings><servers><server><id>github</id><username>${{ secrets.GITHUB_USERNAME }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > settings.xml
-#          docker build --build-arg GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }} \
-#                 --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
-#                 --build-arg WORK_DIR=. \
-#                 -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest .
-#          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker image
+        run: |
+          echo "<settings><servers><server><id>github</id><username>${{ secrets.GITHUB_USERNAME }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > settings.xml
+          docker build --build-arg GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }} \
+                 --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+                 --build-arg WORK_DIR=. \
+                 -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
 
 
       - name: Configure AWS Credentials
@@ -144,13 +146,15 @@ jobs:
 
       # Add a new step after Configure AWS Credentials to fetch the password
 
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
       - name: Retrieve RDS password from AWS Secrets Manager
         id: fetch_rds_password
         run: |
-          # Replace YOUR_SECRET_NAME with your actual Secrets Manager secret name or ARN
-          PASSWORD=$(aws secretsmanager get-secret-value --secret-id YOUR_SECRET_NAME --query SecretString --output text)
-          echo "rds_password=$PASSWORD" >> $GITHUB_OUTPUT
-
+          SECRET=$(aws secretsmanager get-secret-value --secret-id ${{ secrets.RDS_SECRET_ARN }} --query SecretString --output text)
+          PASSWORD=$(echo "$SECRET" | jq -r '.password')
+          echo "rds_password=$PASSWORD" >> "$GITHUB_OUTPUT"
 
       - name: Deploy with Helm
         run: |
@@ -159,11 +163,3 @@ jobs:
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }} \
           --set image.tag=latest \
           --set db.password=${{ steps.fetch_rds_password.outputs.rds_password }}
-
-      
-          
-      
-
-
-      
-        
