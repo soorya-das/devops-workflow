@@ -101,7 +101,8 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{inputs.working-directory}}
-        run: terraform init
+#        run: terraform init
+        run: terraform init -upgrade
 
       - name: Terraform Apply
         working-directory: ${{inputs.working-directory}}
