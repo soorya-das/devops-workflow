@@ -69,24 +69,24 @@ jobs:
           echo "Using build version: $VERSION"
           ./mvnw versions:set -DnewVersion=$VERSION
 
-      - name: Publish to GitHub Packages
-        env:
-          GITHUB_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          GITHUB_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
-        run: |
-          ./mvnw --batch-mode deploy
-
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Build and Push Docker image
-        run: |
-          echo "<settings><servers><server><id>github</id><username>${{ secrets.GITHUB_USERNAME }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > settings.xml
-          docker build --build-arg GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }} \
-                 --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
-                 --build-arg WORK_DIR=. \
-                 -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
+#      - name: Publish to GitHub Packages
+#        env:
+#          GITHUB_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+#          GITHUB_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
+#        run: |
+#          ./mvnw --batch-mode deploy
+#
+#      - name: Login to Docker Hub
+#        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+#
+#      - name: Build and Push Docker image
+#        run: |
+#          echo "<settings><servers><server><id>github</id><username>${{ secrets.GITHUB_USERNAME }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > settings.xml
+#          docker build --build-arg GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }} \
+#                 --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+#                 --build-arg WORK_DIR=. \
+#                 -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest .
+#          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
 
 
       - name: Configure AWS Credentials
