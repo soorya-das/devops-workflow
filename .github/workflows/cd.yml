@@ -159,7 +159,7 @@ jobs:
       - name: Deploy with Helm
         run: |
           helm upgrade --install ${{ inputs.service-name }} ./helm/${{ inputs.chart-name }} \
-          --namespace ${{ inputs.namespace }} --create-namespace \
-          --set image.repository=${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }} \
-          --set image.tag=latest \
-          --set db.password=${{ steps.fetch_rds_password.outputs.rds_password }}
+            --namespace ${{ inputs.namespace }} --create-namespace \
+            --set image.repository=${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }} \
+            --set image.tag=latest \
+            --set-string db.password="${{ steps.fetch_rds_password.outputs.rds_password }}"
