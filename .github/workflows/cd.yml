@@ -102,34 +102,37 @@ jobs:
         uses: hashicorp/setup-terraform@v1
 
       - name: Terraform Init
-        working-directory: ${{inputs.working-directory}}
+        working-directory: ${{ inputs.working-directory }}
         run: terraform init
-#        run: terraform init -upgrade
 
-      - name: Terraform Apply
-        working-directory: ${{inputs.working-directory}}
-        run: terraform apply -auto-approve
-#        run: terraform apply -target=kubernetes_config_map.aws_auth
-
+      - name: Terraform Apply - Create EKS Cluster Only
+        working-directory: ${{ inputs.working-directory }}
+        run: terraform apply -target=module.eks -auto-approve
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ap-south-1
 
-
-
-      - name: Update kubeconfig with cluster
+      - name: Update kubeconfig with EKS cluster
         run: |
           aws eks update-kubeconfig --region ap-south-1 --name ${{ inputs.cluster-name }}
 
-      - name: Use correct EKS context
-        run: |
-          CONTEXT=$(kubectl config get-contexts -o name | grep ${{ inputs.cluster-name }})
-          echo "Using context: $CONTEXT"
-          kubectl config use-context "$CONTEXT"
+      - name: Terraform Apply - Remaining Resources (aws_auth, etc.)
+        working-directory: ${{ inputs.working-directory }}
+        run: terraform apply -auto-approve
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ap-south-1
+
+#      - name: Use correct EKS context
+#        run: |
+#          CONTEXT=$(kubectl config get-contexts -o name | grep ${{ inputs.cluster-name }})
+#          echo "Using context: $CONTEXT"
+#          kubectl config use-context "$CONTEXT"
       
 
-      #      - name: Set up Kubeconfig
+#      - name: Set up Kubeconfig
 #        run: |
 #          mkdir -p ~/.kube
 #          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
