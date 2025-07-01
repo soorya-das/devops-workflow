@@ -110,7 +110,7 @@ jobs:
         run: |
           aws eks update-kubeconfig --region ap-south-1 --name ${{ inputs.cluster-name }}
 
-      - name: Terraform Apply - Remaining Resources (aws_auth, etc.)
+      - name: Terraform Apply
         working-directory: ${{ inputs.working-directory }}
         run: terraform apply -auto-approve
         env:
