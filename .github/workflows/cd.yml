@@ -71,13 +71,13 @@ jobs:
           echo "Using build version: $VERSION"
           ./mvnw versions:set -DnewVersion=$VERSION
 
-#      - name: Publish to GitHub Packages
-#        env:
-#          GITHUB_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-#          GITHUB_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
-#        run: |
-#          ./mvnw --batch-mode deploy
-#
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          GITHUB_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
+        run: |
+          ./mvnw --batch-mode deploy
+
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
@@ -91,71 +91,71 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
 
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1
-
-      - name: Terraform Init
-        working-directory: ${{ inputs.working-directory }}
-        run: terraform init
-
-
-      - name: Update kubeconfig with EKS cluster
-        run: |
-          aws eks update-kubeconfig --region ap-south-1 --name ${{ inputs.cluster-name }}
-
-      - name: Terraform Apply
-        working-directory: ${{ inputs.working-directory }}
-        run: terraform apply -auto-approve
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ap-south-1
-
-#      - name: Use correct EKS context
+#      - name: Configure AWS Credentials
+#        uses: aws-actions/configure-aws-credentials@v2
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ap-south-1
+#
+#      - name: Set up Terraform
+#        uses: hashicorp/setup-terraform@v1
+#
+#      - name: Terraform Init
+#        working-directory: ${{ inputs.working-directory }}
+#        run: terraform init
+#
+#
+#      - name: Update kubeconfig with EKS cluster
 #        run: |
-#          CONTEXT=$(kubectl config get-contexts -o name | grep ${{ inputs.cluster-name }})
-#          echo "Using context: $CONTEXT"
-#          kubectl config use-context "$CONTEXT"
-      
-
-#      - name: Set up Kubeconfig
+#          aws eks update-kubeconfig --region ap-south-1 --name ${{ inputs.cluster-name }}
+#
+#      - name: Terraform Apply
+#        working-directory: ${{ inputs.working-directory }}
+#        run: terraform apply -auto-approve
+#        env:
+#          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          AWS_DEFAULT_REGION: ap-south-1
+#
+##      - name: Use correct EKS context
+##        run: |
+##          CONTEXT=$(kubectl config get-contexts -o name | grep ${{ inputs.cluster-name }})
+##          echo "Using context: $CONTEXT"
+##          kubectl config use-context "$CONTEXT"
+#
+#
+##      - name: Set up Kubeconfig
+##        run: |
+##          mkdir -p ~/.kube
+##          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
+##          chmod 600 ~/.kube/config
+#
+##      - name: Debug kubeconfig
+##        run: |
+##          kubectl config get-contexts
+##          kubectl get nodes
+#
+#
+#      - name: Set up Helm
+#        uses: azure/setup-helm@v3
+#
+#      # Add a new step after Configure AWS Credentials to fetch the password
+#
+#      - name: Install jq
+#        run: sudo apt-get install -y jq
+#
+#      - name: Retrieve RDS password from AWS Secrets Manager
+#        id: fetch_rds_password
 #        run: |
-#          mkdir -p ~/.kube
-#          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 --decode > ~/.kube/config
-#          chmod 600 ~/.kube/config
-
-#      - name: Debug kubeconfig
+#          SECRET=$(aws secretsmanager get-secret-value --secret-id ${{ secrets.RDS_SECRET_ARN }} --query SecretString --output text)
+#          PASSWORD=$(echo "$SECRET" | jq -r '.password')
+#          echo "rds_password=$PASSWORD" >> "$GITHUB_OUTPUT"
+#
+#      - name: Deploy with Helm
 #        run: |
-#          kubectl config get-contexts
-#          kubectl get nodes
-
-
-      - name: Set up Helm
-        uses: azure/setup-helm@v3
-
-      # Add a new step after Configure AWS Credentials to fetch the password
-
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
-      - name: Retrieve RDS password from AWS Secrets Manager
-        id: fetch_rds_password
-        run: |
-          SECRET=$(aws secretsmanager get-secret-value --secret-id ${{ secrets.RDS_SECRET_ARN }} --query SecretString --output text)
-          PASSWORD=$(echo "$SECRET" | jq -r '.password')
-          echo "rds_password=$PASSWORD" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy with Helm
-        run: |
-          helm upgrade --install ${{ inputs.service-name }} ./helm/${{ inputs.chart-name }} \
-            --namespace ${{ inputs.namespace }} --create-namespace \
-            --set image.repository=${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }} \
-            --set image.tag=latest \
-            --set-string db.password="${{ steps.fetch_rds_password.outputs.rds_password }}"
+#          helm upgrade --install ${{ inputs.service-name }} ./helm/${{ inputs.chart-name }} \
+#            --namespace ${{ inputs.namespace }} --create-namespace \
+#            --set image.repository=${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }} \
+#            --set image.tag=latest \
+#            --set-string db.password="${{ steps.fetch_rds_password.outputs.rds_password }}"
