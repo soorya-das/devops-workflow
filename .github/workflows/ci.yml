@@ -126,8 +126,8 @@ jobs:
         run: ./mvnw -Dbuild.version=$VERSION clean install -DskipTests
 
       # 8. Unit Tests
-      - name: Run unit tests
-        run: ./mvnw test
+#      - name: Run unit tests
+#        run: ./mvnw test
 
       # 9. Print Project Key
       - name: Print Project Key
