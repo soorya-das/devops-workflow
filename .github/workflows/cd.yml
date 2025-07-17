@@ -38,12 +38,12 @@ on:
         required: true
 #      KUBECONFIG_CONTENT:
 #        required: true
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
-      RDS_SECRET_ARN:
-        required: true
+#      AWS_ACCESS_KEY_ID:
+#        required: true
+#      AWS_SECRET_ACCESS_KEY:
+#        required: true
+#      RDS_SECRET_ARN:
+#        required: true
 
 jobs:
   publish:
@@ -71,14 +71,12 @@ jobs:
           echo "Using build version: $VERSION"
           ./mvnw versions:set -DnewVersion=$VERSION
 
-      - name: Publish to GitHub Packages
-        env:
-          GITHUB_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          GITHUB_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
-        run: |
-          ./mvnw --batch-mode deploy -DskipTests
-
-
+#      - name: Publish to GitHub Packages
+#        env:
+#          GITHUB_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+#          GITHUB_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
+#        run: |
+#          ./mvnw --batch-mode deploy -DskipTests
 
 
       - name: Login to Docker Hub
