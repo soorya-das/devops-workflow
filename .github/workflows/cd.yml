@@ -84,12 +84,21 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
-          echo "<settings><servers><server><id>github</id><username>${{ secrets.GITHUB_USERNAME }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > settings.xml
-          docker build --build-arg GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }} \
-                 --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
-                 --build-arg WORK_DIR=. \
-                 -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest .
+          docker build \
+            --build-arg WORK_DIR=. \
+            -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${VERSION} .
+          docker tag ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${VERSION} ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${VERSION}
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
+
+#      - name: Build and Push Docker image
+#        run: |
+#          echo "<settings><servers><server><id>github</id><username>${{ secrets.GITHUB_USERNAME }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > settings.xml
+#          docker build --build-arg GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }} \
+#                 --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+#                 --build-arg WORK_DIR=. \
+#                 -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest .
+#          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
 
 
 #      - name: Configure AWS Credentials
