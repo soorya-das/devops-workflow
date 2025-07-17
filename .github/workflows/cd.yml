@@ -72,13 +72,13 @@ jobs:
 #          ./mvnw versions:set -DnewVersion=$VERSION
 
       - name: Set Project Version from version.properties
+        id: set_version
         run: |
           VERSION=$(grep build.version version.properties | cut -d'=' -f2)
           echo "Using build version: $VERSION"
+          ./mvnw versions:set -DnewVersion=$VERSION
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-      
-
-      #      - name: Publish to GitHub Packages
+#      - name: Publish to GitHub Packages
 #        env:
 #          GITHUB_USERNAME: ${{ secrets.MAVEN_USERNAME }}
 #          GITHUB_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
@@ -88,15 +88,23 @@ jobs:
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
       - name: Build and Push Docker image
         run: |
-          docker build \
-            --build-arg WORK_DIR=. \
-            -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${{ env.VERSION }} .
-          docker tag ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${{ env.VERSION }} ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${{ env.VERSION }}
+          echo "<settings><servers><server><id>github</id><username>${{ secrets.GITHUB_USERNAME }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > settings.xml
+          
+          # Suppose VERSION is already set as an environment variable or you can define it here
+          VERSION=$(grep build.version version.properties | cut -d'=' -f2)
+          echo "Using version: $VERSION"
+          
+          docker build --build-arg GITHUB_USERNAME=${{ secrets.GITHUB_USERNAME }} \
+                       --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+                       --build-arg WORK_DIR=. \
+                       -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:$VERSION \
+                       -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest .
+          
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:$VERSION
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
+
 
 #      - name: Build and Push Docker image
 #        run: |
