@@ -65,13 +65,20 @@ jobs:
       - name: Make Maven Wrapper Executable
         run: chmod +x mvnw
 
+#      - name: Set Project Version from version.properties
+#        run: |
+#          VERSION=$(grep build.version version.properties | cut -d'=' -f2)
+#          echo "Using build version: $VERSION"
+#          ./mvnw versions:set -DnewVersion=$VERSION
+
       - name: Set Project Version from version.properties
         run: |
           VERSION=$(grep build.version version.properties | cut -d'=' -f2)
           echo "Using build version: $VERSION"
-          ./mvnw versions:set -DnewVersion=$VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      
 
-#      - name: Publish to GitHub Packages
+      #      - name: Publish to GitHub Packages
 #        env:
 #          GITHUB_USERNAME: ${{ secrets.MAVEN_USERNAME }}
 #          GITHUB_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
@@ -86,9 +93,9 @@ jobs:
         run: |
           docker build \
             --build-arg WORK_DIR=. \
-            -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${VERSION} .
-          docker tag ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${VERSION} ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${VERSION}
+            -t ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${{ env.VERSION }} .
+          docker tag ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${{ env.VERSION }} ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:${{ env.VERSION }}
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ inputs.image-name }}:latest
 
 #      - name: Build and Push Docker image
