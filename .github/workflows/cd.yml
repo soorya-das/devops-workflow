@@ -36,8 +36,8 @@ on:
         required: true
       DOCKER_PASSWORD:
         required: true
-#      KUBECONFIG_CONTENT:
-#        required: true
+      KUBECONFIG_CONTENT:
+        required: true
 #      AWS_ACCESS_KEY_ID:
 #        required: true
 #      AWS_SECRET_ACCESS_KEY:
@@ -106,6 +106,32 @@ jobs:
 
           docker push $DOCKER_USERNAME/${{ inputs.image-name }}:$VERSION
           docker push $DOCKER_USERNAME/${{ inputs.image-name }}:latest
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.5
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.27.0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.12.0
+
+      - name: Configure kubeconfig
+        run: |
+          echo "${KUBECONFIG_CONTENT}" | base64 -d > $HOME/.kube/config
+
+      - name: Terraform Init
+        working-directory: ./terraform
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ./terraform
+        run: terraform apply -auto-approve
 
 
 #      - name: Build and Push Docker image
