@@ -126,7 +126,12 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
-      
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Create Kind K8s cluster
+        uses: helm/kind-action@v1.5.0
 
       - name: Terraform Init
         working-directory: ${{ inputs.working-directory }}
